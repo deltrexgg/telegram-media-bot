@@ -12,6 +12,7 @@ import (
 	"os"
 	"os/signal"
 
+	config "github.com/deltrexgg/telegram-media-bot/internal/config"
 	"github.com/deltrexgg/telegram-media-bot/internal/telegram"
 	"github.com/go-telegram/bot"
 	"github.com/joho/godotenv"
@@ -22,6 +23,8 @@ func main() {
 	if err := godotenv.Load(); err != nil {
 		log.Fatal("failed to load .env file")
 	}
+
+	config.InitDB()
 
 	apiKey := os.Getenv("TELEGRAM_API")
 	if apiKey == "" {
