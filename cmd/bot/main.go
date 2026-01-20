@@ -13,6 +13,9 @@ import (
 	"os/signal"
 
 	config "github.com/deltrexgg/telegram-media-bot/internal/config"
+	"github.com/deltrexgg/telegram-media-bot/internal/handler"
+	"github.com/deltrexgg/telegram-media-bot/internal/repository"
+	"github.com/deltrexgg/telegram-media-bot/internal/service"
 	"github.com/deltrexgg/telegram-media-bot/internal/telegram"
 	"github.com/go-telegram/bot"
 	"github.com/joho/godotenv"
@@ -31,10 +34,16 @@ func main() {
 		log.Fatal("TELEGRAM_API is not set")
 	}
 
+	folderrepo := repository.FolderRepoMethod()
+	folderservice := service.FolderServiceMethod(folderrepo)
+	folderhandler := handler.FolderHandler(folderservice)
+
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()
 
-	opts := []bot.Option{}
+	opts := []bot.Option{
+		bot.WithDefaultHandler(folderhandler.CreateFolder),
+	}
 
 	b, err := telegram.InitBot(apiKey, opts...)
 	if err != nil {
