@@ -17,6 +17,7 @@ import (
 	"github.com/deltrexgg/telegram-media-bot/internal/repository"
 	"github.com/deltrexgg/telegram-media-bot/internal/service"
 	"github.com/deltrexgg/telegram-media-bot/internal/telegram"
+	"github.com/deltrexgg/telegram-media-bot/migrations"
 	"github.com/go-telegram/bot"
 	"github.com/joho/godotenv"
 )
@@ -28,6 +29,8 @@ func main() {
 	}
 
 	config.InitDB()
+
+	migrations.AutoMigrate()
 
 	apiKey := os.Getenv("TELEGRAM_API")
 	if apiKey == "" {
