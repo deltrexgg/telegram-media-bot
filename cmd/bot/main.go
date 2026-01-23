@@ -37,7 +37,7 @@ func main() {
 		log.Fatal("TELEGRAM_API is not set")
 	}
 
-	folderrepo := repository.NewFolderRepo()
+	folderrepo := repository.NewFolderRepo(config.DB)
 	folderservice := service.NewFolderService(folderrepo)
 	folderhandler := handler.NewFolderHandler(folderservice)
 

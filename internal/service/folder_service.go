@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 
+	"github.com/deltrexgg/telegram-media-bot/internal/domain"
 	"github.com/deltrexgg/telegram-media-bot/internal/repository"
 	"github.com/deltrexgg/telegram-media-bot/internal/utils"
 )
@@ -20,6 +21,11 @@ func NewFolderService(repo repository.FolderRepo) FolderService {
 }
 
 func (s *service) AddFolder(ctx context.Context, foldername string, userid string) error {
-	id := utils.IdGenerator()
-	return s.repo.Create(ctx, foldername, userid, id)
+
+	folder := domain.Folders{
+		ID:        utils.IdGenerator(),
+		Name:      foldername,
+		CreatedBy: userid,
+	}
+	return s.repo.Create(ctx, folder)
 }

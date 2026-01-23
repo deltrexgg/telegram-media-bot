@@ -2,27 +2,27 @@ package repository
 
 import (
 	"context"
+	"database/sql"
 
-	"github.com/deltrexgg/telegram-media-bot/internal/config"
+	"github.com/deltrexgg/telegram-media-bot/internal/domain"
 )
 
 type FolderRepo interface {
-	Create(ctx context.Context, foldername string, userid string, id string) error
+	Create(ctx context.Context, folder domain.Folders) error
 }
 
-type repo struct{}
-
-func NewFolderRepo() FolderRepo {
-	return &repo{}
+type repo struct {
+	db *sql.DB
 }
 
-func (r *repo) Create(ctx context.Context, foldername string, userid string, id string) error {
+func NewFolderRepo(db *sql.DB) FolderRepo {
+	return &repo{db: db}
+}
 
-	db := config.DB
-	_, err := db.Exec("INSERT INTO folders(id, created_by, name) VALUES(?, ?, ?)", id, userid, foldername)
-	if err != nil {
-		return err
-	}
-
-	return nil
+func (r *repo) Create(ctx context.Context, folder domain.Folders) error {
+	_, err := r.db.Exec(
+		"INSERT INTO folders(id, created_by, name) VALUES(?, ?, ?)",
+		folder.ID, folder.CreatedBy, folder.Name,
+	)
+	return err
 }
