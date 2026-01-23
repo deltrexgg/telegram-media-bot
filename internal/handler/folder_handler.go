@@ -14,7 +14,7 @@ type Handler struct {
 	service service.FolderService
 }
 
-func FolderHandler(service service.FolderService) *Handler {
+func NewFolderHandler(service service.FolderService) *Handler {
 	return &Handler{service: service}
 }
 

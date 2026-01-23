@@ -12,7 +12,7 @@ type FolderRepo interface {
 
 type repo struct{}
 
-func FolderRepoMethod() FolderRepo {
+func NewFolderRepo() FolderRepo {
 	return &repo{}
 }
 

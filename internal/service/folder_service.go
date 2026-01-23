@@ -15,7 +15,7 @@ type service struct {
 	repo repository.FolderRepo
 }
 
-func FolderServiceMethod(repo repository.FolderRepo) FolderService {
+func NewFolderService(repo repository.FolderRepo) FolderService {
 	return &service{repo: repo}
 }
 
