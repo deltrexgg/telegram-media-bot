@@ -45,7 +45,7 @@ func main() {
 	defer stop()
 
 	opts := []bot.Option{
-		bot.WithDefaultHandler(folderhandler.CreateFolder),
+		bot.WithMessageTextHandler("/makefolder", bot.MatchTypePrefix, folderhandler.CreateFolder),
 	}
 
 	b, err := telegram.InitBot(apiKey, opts...)

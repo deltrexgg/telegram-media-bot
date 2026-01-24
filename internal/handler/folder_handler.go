@@ -56,3 +56,11 @@ func (h *Handler) CreateFolder(ctx context.Context, b *bot.Bot, update *models.U
 	})
 
 }
+
+func (h *Handler) DeleteFolder(ctx context.Context, b *bot.Bot, update *models.Update) {
+	/*
+		List the folders
+		User select the folder the corresponding id is return (from chat)
+		manage the response
+	*/
+}
