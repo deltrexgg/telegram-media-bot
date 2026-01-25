@@ -12,6 +12,7 @@ type FolderRepo interface {
 	Create(ctx context.Context, folder domain.Folders) error
 	Delete(ctx context.Context, id string) error
 	GrandFolderAccess(ctx context.Context, access domain.Access) error
+	FolderNameByUserId(ctx context.Context, userID string) ([]domain.FoldersList, error)
 }
 
 type repo struct {
@@ -47,4 +48,35 @@ func (r *repo) GrandFolderAccess(ctx context.Context, access domain.Access) erro
 	}
 
 	return nil
+}
+
+func (r *repo) FolderNameByUserId(ctx context.Context, userID string) ([]domain.FoldersList, error) {
+	rows, err := r.db.QueryContext(
+		ctx,
+		`SELECT f.id, f.name
+		 FROM access a
+		 JOIN folders f ON a.folder_id = f.id
+		 WHERE a.user_id = ?;`,
+		userID,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var folders []domain.FoldersList
+
+	for rows.Next() {
+		var f domain.FoldersList
+		if err := rows.Scan(&f.ID, &f.Name); err != nil {
+			return nil, err
+		}
+		folders = append(folders, f)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return folders, nil
 }

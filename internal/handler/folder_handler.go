@@ -64,3 +64,24 @@ func (h *Handler) DeleteFolder(ctx context.Context, b *bot.Bot, update *models.U
 		manage the response
 	*/
 }
+
+func (h *Handler) GetFolderList(ctx context.Context, b *bot.Bot, update *models.Update) {
+	chatId := update.Message.Chat.ID
+	UserId := strconv.Itoa(int(update.Message.From.ID))
+
+	buttonpad, err := h.service.Folderlist(ctx, UserId)
+	if err != nil {
+		b.SendMessage(ctx, &bot.SendMessageParams{
+			ChatID: chatId,
+			Text:   "Failed",
+		})
+		return
+	}
+
+	b.SendMessage(ctx, &bot.SendMessageParams{
+		ChatID:      chatId,
+		Text:        "Select the folder to view : ",
+		ReplyMarkup: buttonpad,
+	})
+
+}

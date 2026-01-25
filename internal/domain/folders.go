@@ -12,3 +12,8 @@ type Folders struct {
 
 	CreatedAt time.Time `json:"created_at"`
 }
+
+type FoldersList struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
+}

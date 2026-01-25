@@ -3,16 +3,19 @@ package service
 import (
 	"context"
 	"errors"
+	"log"
 
 	"github.com/deltrexgg/telegram-media-bot/internal/domain"
 	"github.com/deltrexgg/telegram-media-bot/internal/repository"
 	"github.com/deltrexgg/telegram-media-bot/internal/utils"
+	"github.com/go-telegram/bot/models"
 	"github.com/google/uuid"
 )
 
 type FolderService interface {
 	AddFolder(ctx context.Context, foldername string, userid string) error
 	RemoveFolder(ctx context.Context, id string) error
+	Folderlist(ctx context.Context, userId string) (*models.InlineKeyboardMarkup, error)
 }
 
 type service struct {
@@ -55,4 +58,23 @@ func (s *service) RemoveFolder(ctx context.Context, id string) error {
 	}
 
 	return s.repo.Delete(ctx, id)
+}
+
+func (s *service) Folderlist(ctx context.Context, userId string) (*models.InlineKeyboardMarkup, error) {
+	folders, err := s.repo.FolderNameByUserId(ctx, userId)
+	if err != nil {
+		return &models.InlineKeyboardMarkup{}, err
+	}
+
+	buttonPad := &models.InlineKeyboardMarkup{
+		InlineKeyboard: [][]models.InlineKeyboardButton{
+			{
+				{Text: "📁 My Files", CallbackData: "files"},
+				{Text: "📤 Upload", CallbackData: "upload"},
+			},
+		},
+	}
+
+	log.Println("Folders : ", folders)
+	return buttonPad, nil
 }
