@@ -66,13 +66,19 @@ func (s *service) Folderlist(ctx context.Context, userId string) (*models.Inline
 		return &models.InlineKeyboardMarkup{}, err
 	}
 
-	buttonPad := &models.InlineKeyboardMarkup{
-		InlineKeyboard: [][]models.InlineKeyboardButton{
+	keyboard := [][]models.InlineKeyboardButton{}
+
+	for _, f := range folders {
+		keyboard = append(keyboard, []models.InlineKeyboardButton{
 			{
-				{Text: "📁 My Files", CallbackData: "files"},
-				{Text: "📤 Upload", CallbackData: "upload"},
+				Text:         f.Name,
+				CallbackData: f.ID,
 			},
-		},
+		})
+	}
+
+	buttonPad := &models.InlineKeyboardMarkup{
+		InlineKeyboard: keyboard,
 	}
 
 	log.Println("Folders : ", folders)
