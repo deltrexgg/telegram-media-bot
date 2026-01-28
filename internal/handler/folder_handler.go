@@ -69,7 +69,8 @@ func (h *Handler) GetFolderList(ctx context.Context, b *bot.Bot, update *models.
 	chatId := update.Message.Chat.ID
 	UserId := strconv.Itoa(int(update.Message.From.ID))
 
-	buttonpad, err := h.service.Folderlist(ctx, UserId)
+	text := update.Message.Text
+	buttonpad, err := h.service.Folderlist(ctx, UserId, text)
 	if err != nil {
 		b.SendMessage(ctx, &bot.SendMessageParams{
 			ChatID: chatId,

@@ -15,15 +15,15 @@ type FolderRepo interface {
 	FolderNameByUserId(ctx context.Context, userID string) ([]domain.FoldersList, error)
 }
 
-type repo struct {
+type folderrepo struct {
 	db *sql.DB
 }
 
 func NewFolderRepo(db *sql.DB) FolderRepo {
-	return &repo{db: db}
+	return &folderrepo{db: db}
 }
 
-func (r *repo) Create(ctx context.Context, folder domain.Folders) error {
+func (r *folderrepo) Create(ctx context.Context, folder domain.Folders) error {
 	_, err := r.db.Exec(
 		"INSERT INTO folders(id, created_by, name) VALUES(?, ?, ?)",
 		folder.ID, folder.CreatedBy, folder.Name,
@@ -31,7 +31,7 @@ func (r *repo) Create(ctx context.Context, folder domain.Folders) error {
 	return err
 }
 
-func (r *repo) Delete(ctx context.Context, id string) error {
+func (r *folderrepo) Delete(ctx context.Context, id string) error {
 
 	_, err := r.db.Exec(
 		"DELETE FROM folders WHERE id = ?", id,
@@ -40,7 +40,7 @@ func (r *repo) Delete(ctx context.Context, id string) error {
 	return err
 }
 
-func (r *repo) GrandFolderAccess(ctx context.Context, access domain.Access) error {
+func (r *folderrepo) GrandFolderAccess(ctx context.Context, access domain.Access) error {
 	_, err := r.db.Exec("INSERT INTO access(id, folder_id, user_id) VALUES(?, ?, ?);", access.ID, access.FolderID, access.UserID)
 	if err != nil {
 		log.Println(err.Error())
@@ -50,7 +50,7 @@ func (r *repo) GrandFolderAccess(ctx context.Context, access domain.Access) erro
 	return nil
 }
 
-func (r *repo) FolderNameByUserId(ctx context.Context, userID string) ([]domain.FoldersList, error) {
+func (r *folderrepo) FolderNameByUserId(ctx context.Context, userID string) ([]domain.FoldersList, error) {
 	rows, err := r.db.QueryContext(
 		ctx,
 		`SELECT f.id, f.name

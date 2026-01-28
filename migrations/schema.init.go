@@ -59,11 +59,21 @@ func AutoMigrate() {
 		FOREIGN KEY (user_id) REFERENCES folders(created_by)
 	);`
 
+	statusSmt := `
+	CREATE TABLE IF NOT EXISTS upload_status (
+		id TEXT PRIMARY KEY,
+		user_id TEXT NOT NULL,
+		folder_id TEXT NOT NULL,
+		FOREIGN KEY (folder_id) REFERENCES folders(id)
+	);
+	`
+
 	stmts := []string{
 		folderSmt,
 		fileSmt,
 		accessSmt,
 		historySmt,
+		statusSmt,
 	}
 
 	for _, stmt := range stmts {

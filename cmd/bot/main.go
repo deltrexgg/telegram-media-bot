@@ -41,12 +41,17 @@ func main() {
 	folderservice := service.NewFolderService(folderrepo)
 	folderhandler := handler.NewFolderHandler(folderservice)
 
+	filerepo := repository.NewFileRepo(config.DB)
+	fileservice := service.NewFileService(filerepo)
+	filehandler := handler.NewFileHandler(fileservice)
+
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()
 
 	opts := []bot.Option{
 		bot.WithMessageTextHandler("/makefolder", bot.MatchTypePrefix, folderhandler.CreateFolder),
 		bot.WithMessageTextHandler("/folders", bot.MatchTypePrefix, folderhandler.GetFolderList),
+		bot.WithCallbackQueryDataHandler("/getfiles", bot.MatchTypePrefix, filehandler.SendFiles),
 	}
 
 	b, err := telegram.InitBot(apiKey, opts...)

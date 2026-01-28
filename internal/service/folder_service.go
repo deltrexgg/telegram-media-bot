@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"errors"
-	"log"
 
 	"github.com/deltrexgg/telegram-media-bot/internal/domain"
 	"github.com/deltrexgg/telegram-media-bot/internal/repository"
@@ -15,7 +14,7 @@ import (
 type FolderService interface {
 	AddFolder(ctx context.Context, foldername string, userid string) error
 	RemoveFolder(ctx context.Context, id string) error
-	Folderlist(ctx context.Context, userId string) (*models.InlineKeyboardMarkup, error)
+	Folderlist(ctx context.Context, userId string, text string) (*models.InlineKeyboardMarkup, error)
 }
 
 type service struct {
@@ -60,7 +59,18 @@ func (s *service) RemoveFolder(ctx context.Context, id string) error {
 	return s.repo.Delete(ctx, id)
 }
 
-func (s *service) Folderlist(ctx context.Context, userId string) (*models.InlineKeyboardMarkup, error) {
+func (s *service) Folderlist(ctx context.Context, userId string, text string) (*models.InlineKeyboardMarkup, error) {
+
+	var tag string
+
+	switch text {
+	case "/folders":
+		tag = "/getfiles"
+
+	case "/addfiles":
+		tag = "/addfiles"
+	}
+
 	folders, err := s.repo.FolderNameByUserId(ctx, userId)
 	if err != nil {
 		return &models.InlineKeyboardMarkup{}, err
@@ -72,7 +82,7 @@ func (s *service) Folderlist(ctx context.Context, userId string) (*models.Inline
 		keyboard = append(keyboard, []models.InlineKeyboardButton{
 			{
 				Text:         f.Name,
-				CallbackData: f.ID,
+				CallbackData: tag + " " + f.ID, //identify the callback function
 			},
 		})
 	}
@@ -81,6 +91,5 @@ func (s *service) Folderlist(ctx context.Context, userId string) (*models.Inline
 		InlineKeyboard: keyboard,
 	}
 
-	log.Println("Folders : ", folders)
 	return buttonPad, nil
 }
