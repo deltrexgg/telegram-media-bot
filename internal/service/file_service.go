@@ -31,7 +31,7 @@ func (s *fileservice) GetFiles(ctx context.Context, folder_id string) ([]string,
 		seperate /files from id and send the id to Get method
 	*/
 
-	parts := strings.Split(folder_id, " ")
+	parts := strings.Split(folder_id, ":")
 	folder_id = parts[1]
 
 	if _, err := uuid.Parse(folder_id); err != nil {
@@ -41,20 +41,17 @@ func (s *fileservice) GetFiles(ctx context.Context, folder_id string) ([]string,
 	return s.repo.Get(ctx, folder_id)
 }
 
-func (s *fileservice) OpenFolder(ctx context.Context, user_id string, folder_id string) error {
+func (s *fileservice) OpenFolder(ctx context.Context, userID string, folderID string) error {
+
 	details := &domain.Status{
-		ID: utils.IdGenerator(),
-		UserID: user_id,
-		FolderID: folder_id,
+		ID:       utils.IdGenerator(),
+		UserID:   userID,
+		FolderID: folderID,
 	}
 
-	err := s.repo.AddStatus(ctx, *details)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return s.repo.AddStatus(ctx, *details)
 }
+
 
 func (s *fileservice) CloseFolder(ctx context.Context, user_id string) error {
 	err := s.repo.StopFileShare(ctx, user_id)

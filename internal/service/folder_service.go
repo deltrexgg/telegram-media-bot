@@ -59,21 +59,11 @@ func (s *service) RemoveFolder(ctx context.Context, id string) error {
 	return s.repo.Delete(ctx, id)
 }
 
-func (s *service) Folderlist(ctx context.Context, userId string, text string) (*models.InlineKeyboardMarkup, error) {
-
-	var tag string
-
-	switch text {
-	case "/folders":
-		tag = "/getfiles"
-
-	case "/addfiles":
-		tag = "/addfiles"
-	}
+func (s *service) Folderlist(ctx context.Context, userId string, intent string) (*models.InlineKeyboardMarkup, error) {
 
 	folders, err := s.repo.FolderNameByUserId(ctx, userId)
 	if err != nil {
-		return &models.InlineKeyboardMarkup{}, err
+		return nil, err
 	}
 
 	keyboard := [][]models.InlineKeyboardButton{}
@@ -82,14 +72,12 @@ func (s *service) Folderlist(ctx context.Context, userId string, text string) (*
 		keyboard = append(keyboard, []models.InlineKeyboardButton{
 			{
 				Text:         f.Name,
-				CallbackData: tag + " " + f.ID, //identify the callback function
+				CallbackData: intent + ":" + f.ID,
 			},
 		})
 	}
 
-	buttonPad := &models.InlineKeyboardMarkup{
+	return &models.InlineKeyboardMarkup{
 		InlineKeyboard: keyboard,
-	}
-
-	return buttonPad, nil
+	}, nil
 }

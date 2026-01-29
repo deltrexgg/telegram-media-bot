@@ -66,23 +66,27 @@ func (h *Handler) DeleteFolder(ctx context.Context, b *bot.Bot, update *models.U
 }
 
 func (h *Handler) GetFolderList(ctx context.Context, b *bot.Bot, update *models.Update) {
-	chatId := update.Message.Chat.ID
-	UserId := strconv.Itoa(int(update.Message.From.ID))
+	chatID := update.Message.Chat.ID
+	userID := strconv.Itoa(int(update.Message.From.ID))
 
-	text := update.Message.Text
-	buttonpad, err := h.service.Folderlist(ctx, UserId, text)
+	intent := "view"
+	if strings.HasPrefix(update.Message.Text, "/addfiles") {
+		intent = "upload"
+	}
+
+	buttonpad, err := h.service.Folderlist(ctx, userID, intent)
 	if err != nil {
 		b.SendMessage(ctx, &bot.SendMessageParams{
-			ChatID: chatId,
+			ChatID: chatID,
 			Text:   "Failed",
 		})
 		return
 	}
 
 	b.SendMessage(ctx, &bot.SendMessageParams{
-		ChatID:      chatId,
-		Text:        "Select the folder to view : ",
+		ChatID:      chatID,
+		Text:        "Select a folder:",
 		ReplyMarkup: buttonpad,
 	})
-
 }
+

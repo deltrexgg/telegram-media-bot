@@ -51,7 +51,9 @@ func main() {
 	opts := []bot.Option{
 		bot.WithMessageTextHandler("/makefolder", bot.MatchTypePrefix, folderhandler.CreateFolder),
 		bot.WithMessageTextHandler("/folders", bot.MatchTypePrefix, folderhandler.GetFolderList),
-		bot.WithCallbackQueryDataHandler("/getfiles", bot.MatchTypePrefix, filehandler.SendFiles),
+		bot.WithMessageTextHandler("/addfiles", bot.MatchTypePrefix, folderhandler.GetFolderList),
+		bot.WithMessageTextHandler("/stop", bot.MatchTypePrefix, filehandler.StopShare),
+		bot.WithCallbackQueryDataHandler("", bot.MatchTypePrefix, filehandler.CallBackHandler),
 	}
 
 	b, err := telegram.InitBot(apiKey, opts...)
