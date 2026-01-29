@@ -3,13 +3,14 @@ package repository
 import (
 	"context"
 	"database/sql"
-	"log"
 
 	"github.com/deltrexgg/telegram-media-bot/internal/domain"
 )
 
 type FileRepo interface {
 	Get(ctx context.Context, folder_id string) ([]string, error)
+	AddStatus(ctx context.Context, details domain.Status) error
+	StopFileShare(ctx context.Context, user_id string) error
 }
 
 type filerepo struct {
@@ -76,4 +77,12 @@ func (r *filerepo) AddStatus(ctx context.Context, details domain.Status) error {
 	}
 
 	return tx.Commit()
+}
+
+func (r *filerepo) StopFileShare(ctx context.Context, user_id string) error {
+	_, err := r.db.Exec("DELETE FROM upload_status WHERE user_id = ?;", user_id)
+	if err != nil {
+		return err
+	}
+	return nil
 }
