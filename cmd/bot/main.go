@@ -28,20 +28,24 @@ func main() {
 		log.Fatal("failed to load .env file")
 	}
 
-	config.InitDB()
+	// return the DB access pointer to a var in the main file which is passed to repo of the modules
+	db, err := config.InitDB()
+	if err != nil {
+		log.Fatalf("Database failed to connect")
+	}
 
-	migrations.AutoMigrate()
+	migrations.AutoMigrate(db)
 
 	apiKey := os.Getenv("TELEGRAM_API")
 	if apiKey == "" {
 		log.Fatal("TELEGRAM_API is not set")
 	}
 
-	folderrepo := repository.NewFolderRepo(config.DB)
+	folderrepo := repository.NewFolderRepo(db)
 	folderservice := service.NewFolderService(folderrepo)
 	folderhandler := handler.NewFolderHandler(folderservice)
 
-	filerepo := repository.NewFileRepo(config.DB)
+	filerepo := repository.NewFileRepo(db)
 	fileservice := service.NewFileService(filerepo)
 	filehandler := handler.NewFileHandler(fileservice)
 

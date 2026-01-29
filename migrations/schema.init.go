@@ -1,9 +1,8 @@
 package migrations
 
 import (
+	"database/sql"
 	"log"
-
-	"github.com/deltrexgg/telegram-media-bot/internal/config"
 )
 
 /*
@@ -11,9 +10,9 @@ import (
 	Check if the schema exists then implement
 */
 
-func AutoMigrate() {
+func AutoMigrate(db *sql.DB) {
 
-	_, err := config.DB.Exec(`PRAGMA foreign_keys = ON;`)
+	_, err := db.Exec(`PRAGMA foreign_keys = ON;`)
 	if err != nil {
 		log.Fatalf("Failed to enable foreign keys: %v", err)
 	}
@@ -77,7 +76,7 @@ func AutoMigrate() {
 	}
 
 	for _, stmt := range stmts {
-		if _, err := config.DB.Exec(stmt); err != nil {
+		if _, err := db.Exec(stmt); err != nil {
 			log.Fatalf("Migration failed: %v", err)
 		}
 	}

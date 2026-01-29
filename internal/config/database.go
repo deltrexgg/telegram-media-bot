@@ -11,16 +11,14 @@ import (
 	Initialize the DB function for database connectivity
 */
 
-var DB *sql.DB
 
-func InitDB() {
+func InitDB() (*sql.DB, error){
 	dbfile := os.Getenv("DATABASE_FILE")
 	log.Println(dbfile)
-	var err error
-	DB, err = sql.Open("sqlite3", dbfile)
-	if err != nil {
-		log.Fatalf("Unable to connect to database : %s", err)
-	}
+	return sql.Open("sqlite3", dbfile)
+	// if err != nil {
+	// 	log.Fatalf("Unable to connect to database : %s", err)
+	// }
 
-	log.Println("Database connection successful")
+	//log.Println("Database connection successful")
 }
