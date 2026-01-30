@@ -53,7 +53,7 @@ func AutoMigrate(db *sql.DB) {
 		id TEXT PRIMARY KEY,
 		folder_id TEXT NOT NULL,
 		user_id TEXT NOT NULL,
-		last_delivered_at TEXT NOT NULL,
+		last_delivered_at TEXT DEFAULT CURRENT_TIMESTAMP,
 		FOREIGN KEY (folder_id) REFERENCES folders(id),
 		FOREIGN KEY (user_id) REFERENCES folders(created_by)
 	);`

@@ -2,6 +2,7 @@ package handler
 
 import (
 	"context"
+	"log"
 	"strconv"
 	"strings"
 
@@ -31,11 +32,9 @@ func (h *FileHandler) CallBackHandler(ctx context.Context, b *bot.Bot, update *m
 		h.StartShare(ctx, b, update)
 	}
 
-
 }
 
-
-//called in callback function for viewing files
+// called in callback function for viewing files
 func (h *FileHandler) ShowFiles(ctx context.Context, b *bot.Bot, update *models.Update) {
 	if update.CallbackQuery == nil {
 		return
@@ -62,14 +61,53 @@ func (h *FileHandler) ShowFiles(ctx context.Context, b *bot.Bot, update *models.
 		return
 	}
 
+	for _, f := range filesid {
+
+		log.Println(f.FileID, f.Type)
+
+		switch f.Type {
+
+		case "image":
+			b.SendPhoto(ctx, &bot.SendPhotoParams{
+				ChatID: chatID,
+				Photo: &models.InputFileString{
+					Data: f.FileID,
+				},
+			})
+
+		case "video":
+			b.SendVideo(ctx, &bot.SendVideoParams{
+				ChatID: chatID,
+				Video: &models.InputFileString{
+					Data: f.FileID,
+				},
+			})
+
+		case "document":
+			b.SendDocument(ctx, &bot.SendDocumentParams{
+				ChatID: chatID,
+				Document: &models.InputFileString{
+					Data: f.FileID,
+				},
+			})
+
+		default:
+			b.SendMessage(ctx, &bot.SendMessageParams{
+				ChatID: chatID,
+				Text:   "Unknown file type",
+			})
+
+		}
+
+	}
+
 	b.SendMessage(ctx, &bot.SendMessageParams{
 		ChatID: chatID,
-		Text:   folder_id,
+		Text:   "You have catch up everything!",
 	})
 }
 
-
-//called in callback function
+// called in callback function
 func (h *FileHandler) StartShare(ctx context.Context, b *bot.Bot, update *models.Update) {
 
 	if update.CallbackQuery == nil {
@@ -112,7 +150,6 @@ func (h *FileHandler) StartShare(ctx context.Context, b *bot.Bot, update *models
 	})
 }
 
-
 func (h *FileHandler) StopShare(ctx context.Context, b *bot.Bot, update *models.Update) {
 	chatID := update.Message.Chat.ID
 	UserId := strconv.Itoa(int(update.Message.From.ID))
@@ -121,13 +158,91 @@ func (h *FileHandler) StopShare(ctx context.Context, b *bot.Bot, update *models.
 	if err != nil {
 		b.SendMessage(ctx, &bot.SendMessageParams{
 			ChatID: chatID,
-			Text: "Cant close the folder , try again later.",
+			Text:   "Cant close the folder , try again later.",
 		})
 		return
-	} 
+	}
 
 	b.SendMessage(ctx, &bot.SendMessageParams{
 		ChatID: chatID,
-		Text: "Folder closed.",
+		Text:   "Folder closed.",
 	})
+}
+
+func (h *FileHandler) CommonFilehandler(ctx context.Context, b *bot.Bot, update *models.Update) {
+
+	if update == nil || update.Message == nil {
+		return
+	}
+
+	msg := update.Message
+	chatID := msg.Chat.ID
+	userID := strconv.Itoa(int(msg.From.ID))
+
+	//photo
+	if len(msg.Photo) > 0 {
+		photo := msg.Photo[len(msg.Photo)-1]
+
+		message, err := h.service.FileUpload(ctx, userID, photo.FileID, "image")
+		if err != nil {
+			b.SendMessage(ctx, &bot.SendMessageParams{
+				ChatID: chatID,
+				Text:   message,
+			})
+			return
+		}
+
+		b.SendMessage(ctx, &bot.SendMessageParams{
+			ChatID: chatID,
+			Text:   "Photo saved successfully",
+		})
+		return
+	}
+
+	//video
+	if msg.Video != nil {
+
+		message, err := h.service.FileUpload(ctx, userID, msg.Video.FileID, "video")
+		if err != nil {
+			b.SendMessage(ctx, &bot.SendMessageParams{
+				ChatID: chatID,
+				Text:   message,
+			})
+			return
+		}
+
+		b.SendMessage(ctx, &bot.SendMessageParams{
+			ChatID: chatID,
+			Text:   "Video saved successfully",
+		})
+		return
+	}
+
+	//documents
+	if msg.Document != nil {
+
+		message, err := h.service.FileUpload(ctx, userID, msg.Document.FileID, "document")
+
+		if err != nil {
+			b.SendMessage(ctx, &bot.SendMessageParams{
+				ChatID: chatID,
+				Text:   message,
+			})
+			return
+		}
+
+		b.SendMessage(ctx, &bot.SendMessageParams{
+			ChatID: chatID,
+			Text:   "Document saved successfully",
+		})
+		return
+	}
+
+	//if unknown commands are send
+	if msg.Text != "" {
+		b.SendMessage(ctx, &bot.SendMessageParams{
+			ChatID: chatID,
+			Text:   "Wrong Commands !",
+		})
+	}
 }

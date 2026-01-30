@@ -11,3 +11,8 @@ type Files struct {
 	UploadedBy string    `json:"uploaded_by"`
 	CreatedAt  time.Time `json:"created_at"`
 }
+
+type SendFile struct {
+	FileID string `json:"file_id"`
+	Type   string `json:"type"`
+}

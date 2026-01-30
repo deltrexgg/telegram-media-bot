@@ -58,6 +58,7 @@ func main() {
 		bot.WithMessageTextHandler("/addfiles", bot.MatchTypePrefix, folderhandler.GetFolderList),
 		bot.WithMessageTextHandler("/stop", bot.MatchTypePrefix, filehandler.StopShare),
 		bot.WithCallbackQueryDataHandler("", bot.MatchTypePrefix, filehandler.CallBackHandler),
+		bot.WithDefaultHandler(filehandler.CommonFilehandler),
 	}
 
 	b, err := telegram.InitBot(apiKey, opts...)

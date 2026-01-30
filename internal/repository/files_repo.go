@@ -3,14 +3,20 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"time"
 
 	"github.com/deltrexgg/telegram-media-bot/internal/domain"
+	"github.com/deltrexgg/telegram-media-bot/internal/utils"
 )
 
 type FileRepo interface {
-	Get(ctx context.Context, folder_id string) ([]string, error)
+	Get(ctx context.Context, folder_id string) ([]domain.SendFile, error)
 	AddStatus(ctx context.Context, details domain.Status) error
 	StopFileShare(ctx context.Context, user_id string) error
+	Upload(ctx context.Context, fileinfo domain.Files) error
+	OpenedFolder(ctx context.Context, user_id string) (string, error)
+	GetOrCreateHistory(ctx context.Context, userID string, folderID string) (time.Time, error)
+	UpdateHistory(ctx context.Context, user_id string, folder_id string) error
 }
 
 type filerepo struct {
@@ -21,31 +27,80 @@ func NewFileRepo(db *sql.DB) FileRepo {
 	return &filerepo{db: db}
 }
 
-func (r *filerepo) Get(ctx context.Context, folder_id string) ([]string, error) {
+func (r *filerepo) GetOrCreateHistory(
+	ctx context.Context,
+	userID string,
+	folderID string,
+) (time.Time, error) {
+
+	// ensure row exists (insert if missing)
+	_, err := r.db.ExecContext(
+		ctx,
+		`INSERT INTO fetch_history (id, user_id, folder_id, last_delivered_at)
+		 VALUES (?, ?, ?, '1970-01-01 00:00:00')
+		 ON CONFLICT(user_id, folder_id) DO NOTHING;`,
+		utils.IdGenerator(),
+		userID,
+		folderID,
+	)
+	if err != nil {
+		return time.Time{}, err
+	}
+
+	// now safely read
+	var lastVisited time.Time
+	err = r.db.QueryRowContext(
+		ctx,
+		`SELECT last_delivered_at
+		 FROM fetch_history
+		 WHERE user_id = ? AND folder_id = ?;`,
+		userID,
+		folderID,
+	).Scan(&lastVisited)
+
+	if err != nil {
+		return time.Time{}, err
+	}
+
+	return lastVisited, nil
+}
+
+func (r *filerepo) UpdateHistory(ctx context.Context, user_id string, folder_id string) error {
+	_, err := r.db.Exec("UPDATE fetch_history SET last_delivered_at = CURRENT_TIMESTAMP WHERE user_id = ? AND folder_id = ?;", user_id, folder_id)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *filerepo) Get(ctx context.Context, folder_id string) ([]domain.SendFile, error) {
 	rows, err := r.db.QueryContext(
 		ctx,
-		`SELECT id FROM files WHERE folder_id = ?;`, folder_id,
+		`SELECT file_id, type FROM files WHERE folder_id = ?`, folder_id,
 	)
-
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	var fileids []string
+	var files []domain.SendFile
+
 	for rows.Next() {
-		var fileid string
-		if err := rows.Scan(&fileid); err != nil {
+		var file domain.SendFile
+
+		if err := rows.Scan(&file.FileID, &file.Type); err != nil {
 			return nil, err
 		}
-		fileids = append(fileids, fileid)
+
+		files = append(files, file)
 	}
 
 	if err := rows.Err(); err != nil {
 		return nil, err
 	}
 
-	return fileids, nil
+	return files, nil
 }
 
 func (r *filerepo) AddStatus(ctx context.Context, details domain.Status) error {
@@ -84,5 +139,27 @@ func (r *filerepo) StopFileShare(ctx context.Context, user_id string) error {
 	if err != nil {
 		return err
 	}
+	return nil
+}
+
+func (r *filerepo) OpenedFolder(ctx context.Context, user_id string) (string, error) {
+
+	var folderID string
+
+	err := r.db.QueryRow("SELECT folder_id FROM upload_status WHERE user_id = ?", user_id).Scan(&folderID)
+	if err != nil {
+		return "", err
+	}
+
+	return folderID, nil
+
+}
+
+func (r *filerepo) Upload(ctx context.Context, fileinfo domain.Files) error {
+	_, err := r.db.Exec("INSERT INTO files(id, file_id, type, folder_id, uploaded_by) VALUES (?, ?, ?, ?, ?);", fileinfo.ID, fileinfo.FileID, fileinfo.Type, fileinfo.FolderId, fileinfo.UploadedBy)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
