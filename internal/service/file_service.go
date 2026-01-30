@@ -15,6 +15,12 @@ type FileService interface {
 	GetFiles(ctx context.Context, folder_id string) ([]domain.SendFile, error)
 	OpenFolder(ctx context.Context, user_id string, folder_id string) error
 	CloseFolder(ctx context.Context, user_id string) error
+	FileUpload(
+		ctx context.Context,
+		userID string,
+		fileID string,
+		fileType string,
+	) (string, error)
 }
 
 type fileservice struct {
@@ -41,8 +47,10 @@ func (s *fileservice) GetFiles(ctx context.Context, folder_id string) ([]domain.
 	return s.repo.Get(ctx, folder_id)
 }
 
-func (s *fileservice) GetLatestFiles(ctx context.Context, user_id string, folder_id string) ([]domain.SendFile, error){} 
-
+/*
+func (s *fileservice) GetLatestFiles(ctx context.Context, user_id string, folder_id string) ([]domain.SendFile, error) {
+}
+*/
 func (s *fileservice) OpenFolder(ctx context.Context, userID string, folderID string) error {
 
 	details := &domain.Status{
@@ -63,13 +71,35 @@ func (s *fileservice) CloseFolder(ctx context.Context, user_id string) error {
 	return nil
 }
 
-func (s *fileservice) FileUpload(ctx context.Context, user_id string, file_id string, filetype string) (string, error) {
+func (s *fileservice) FileUpload(
+	ctx context.Context,
+	userID string,
+	fileID string,
+	fileType string,
+) (string, error) {
 
-	folder_id, err :=
-	fileinfo := &domain.Files{
-		ID:         utils.IdGenerator(),
-		FileID:     file_id,
-		Type:       filetype,
-		UploadedBy: user_id,
+	folderID, err := s.repo.OpenedFolder(ctx, userID)
+	if err != nil {
+		return "no folder opened: use /addfiles to open a folder before uploading files", err
 	}
+
+	if folderID == "" {
+		return "no folder opened: use /addfiles to open a folder before uploading files", errors.New(
+			"no folder opened: use /addfiles to open a folder before uploading files",
+		)
+	}
+
+	fileInfo := domain.Files{
+		ID:         utils.IdGenerator(),
+		FileID:     fileID,
+		Type:       fileType,
+		UploadedBy: userID,
+		FolderId:   folderID,
+	}
+
+	if err := s.repo.Upload(ctx, fileInfo); err != nil {
+		return "", err
+	}
+
+	return "", nil
 }
