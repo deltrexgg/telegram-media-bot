@@ -44,13 +44,29 @@ func (s *fileservice) GetFiles(ctx context.Context, folder_id string) ([]domain.
 		return nil, errors.New("not a valid id")
 	}
 
-	return s.repo.Get(ctx, folder_id)
+	return s.repo.Get(ctx, folder_id, nil)
 }
 
-/*
 func (s *fileservice) GetLatestFiles(ctx context.Context, user_id string, folder_id string) ([]domain.SendFile, error) {
+	lastvisit, err := s.repo.GetOrCreateHistory(ctx, user_id, folder_id)
+	if err != nil {
+		return nil, err
+	}
+
+	fileids, err := s.repo.Get(ctx, folder_id, &lastvisit)
+	if err != nil {
+		return nil, err
+	}
+
+	errr := s.repo.UpdateHistory(ctx, user_id, folder_id)
+	if errr != nil {
+		return nil, errr
+	}
+
+	return fileids, nil
+
 }
-*/
+
 func (s *fileservice) OpenFolder(ctx context.Context, userID string, folderID string) error {
 
 	details := &domain.Status{

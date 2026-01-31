@@ -10,7 +10,7 @@ import (
 )
 
 type FileRepo interface {
-	Get(ctx context.Context, folder_id string) ([]domain.SendFile, error)
+	Get(ctx context.Context, folder_id string, lastVisit *time.Time) ([]domain.SendFile, error)
 	AddStatus(ctx context.Context, details domain.Status) error
 	StopFileShare(ctx context.Context, user_id string) error
 	Upload(ctx context.Context, fileinfo domain.Files) error
@@ -74,11 +74,39 @@ func (r *filerepo) UpdateHistory(ctx context.Context, user_id string, folder_id 
 	return nil
 }
 
-func (r *filerepo) Get(ctx context.Context, folder_id string) ([]domain.SendFile, error) {
-	rows, err := r.db.QueryContext(
-		ctx,
-		`SELECT file_id, type FROM files WHERE folder_id = ?`, folder_id,
+func (r *filerepo) Get(
+	ctx context.Context,
+	folderID string,
+	lastVisit *time.Time,
+) ([]domain.SendFile, error) {
+
+	var (
+		rows *sql.Rows
+		err  error
 	)
+
+	if lastVisit == nil || lastVisit.IsZero() {
+		// fetch all files
+		rows, err = r.db.QueryContext(
+			ctx,
+			`SELECT file_id, type
+			 FROM files
+			 WHERE folder_id = ?`,
+			folderID,
+		)
+	} else {
+		// fetch only files after last visit
+		rows, err = r.db.QueryContext(
+			ctx,
+			`SELECT file_id, type
+			 FROM files
+			 WHERE folder_id = ?
+			   AND created_at > ?`,
+			folderID,
+			lastVisit,
+		)
+	}
+
 	if err != nil {
 		return nil, err
 	}
@@ -88,11 +116,9 @@ func (r *filerepo) Get(ctx context.Context, folder_id string) ([]domain.SendFile
 
 	for rows.Next() {
 		var file domain.SendFile
-
 		if err := rows.Scan(&file.FileID, &file.Type); err != nil {
 			return nil, err
 		}
-
 		files = append(files, file)
 	}
 
