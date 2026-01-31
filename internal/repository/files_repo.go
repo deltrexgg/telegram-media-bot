@@ -17,6 +17,8 @@ type FileRepo interface {
 	OpenedFolder(ctx context.Context, user_id string) (string, error)
 	GetOrCreateHistory(ctx context.Context, userID string, folderID string) (string, error)
 	UpdateHistory(ctx context.Context, user_id string, folder_id string) error
+	GrandAccess(ctx context.Context, details domain.Access) error
+	RevokeAccess(ctx context.Context, details domain.Access) error
 }
 
 type filerepo struct {
@@ -185,6 +187,49 @@ func (r *filerepo) OpenedFolder(ctx context.Context, user_id string) (string, er
 
 func (r *filerepo) Upload(ctx context.Context, fileinfo domain.Files) error {
 	_, err := r.db.Exec("INSERT INTO files(id, file_id, type, folder_id, uploaded_by) VALUES (?, ?, ?, ?, ?);", fileinfo.ID, fileinfo.FileID, fileinfo.Type, fileinfo.FolderId, fileinfo.UploadedBy)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *filerepo) GrandAccess(ctx context.Context, details domain.Access) error {
+
+	var exists bool
+	err := r.db.QueryRowContext(
+		ctx,
+		`SELECT EXISTS(
+		SELECT 1 FROM access
+		WHERE folder_id = ? AND user_id = ?
+	)`,
+		details.FolderID,
+		details.UserID,
+	).Scan(&exists)
+
+	if err != nil {
+		return err
+	}
+
+	if exists {
+		return nil
+	}
+
+	_, err = r.db.ExecContext(
+		ctx,
+		`INSERT INTO access(id, folder_id, user_id)
+	 VALUES (?, ?, ?)`,
+		details.ID,
+		details.FolderID,
+		details.UserID,
+	)
+
+	return err
+
+}
+
+func (r *filerepo) RevokeAccess(ctx context.Context, details domain.Access) error {
+	_, err := r.db.Exec("DELETE FROM access WHERE folder_id = ? AND user_id = ?;", details.FolderID, details.UserID)
 	if err != nil {
 		return err
 	}

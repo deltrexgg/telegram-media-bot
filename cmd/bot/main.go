@@ -59,6 +59,7 @@ func main() {
 		bot.WithMessageTextHandler("/stop", bot.MatchTypePrefix, filehandler.StopShare),
 		bot.WithCallbackQueryDataHandler("", bot.MatchTypePrefix, filehandler.CallBackHandler),
 		bot.WithMessageTextHandler("/latest", bot.MatchTypePrefix, folderhandler.GetFolderList),
+		bot.WithMessageTextHandler("/share", bot.MatchTypePrefix, folderhandler.GetFolderList),
 		bot.WithDefaultHandler(filehandler.CommonFilehandler),
 	}
 

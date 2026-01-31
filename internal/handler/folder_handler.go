@@ -76,6 +76,9 @@ func (h *Handler) GetFolderList(ctx context.Context, b *bot.Bot, update *models.
 	if strings.HasPrefix(update.Message.Text, "/latest") {
 		intent = "newfiles"
 	}
+	if strings.HasPrefix(update.Message.Text, "/share") {
+		intent = "link"
+	}
 
 	buttonpad, err := h.service.Folderlist(ctx, userID, intent)
 	if err != nil {

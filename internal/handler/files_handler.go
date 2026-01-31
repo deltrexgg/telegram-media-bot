@@ -33,6 +33,8 @@ func (h *FileHandler) CallBackHandler(ctx context.Context, b *bot.Bot, update *m
 		h.StartShare(ctx, b, update)
 	case "newfiles":
 		h.ShowLatestFiles(ctx, b, update)
+	case "link":
+		h.ShareLink(ctx, b, update)
 	}
 
 }
@@ -272,4 +274,66 @@ func (h *FileHandler) CommonFilehandler(ctx context.Context, b *bot.Bot, update 
 			Text:   "Wrong Commands !",
 		})
 	}
+}
+
+func (h *FileHandler) ShareLink(ctx context.Context, b *bot.Bot, update *models.Update) {
+	if update.CallbackQuery == nil {
+		return
+	}
+
+	chatID := update.CallbackQuery.From.ID
+
+	me, err := b.GetMe(ctx)
+	if err != nil {
+		b.SendMessage(ctx, &bot.SendMessageParams{
+			ChatID: chatID,
+			Text:   "Unknown issue occurred!",
+		})
+		return
+	}
+
+	botUsername := me.Username
+
+	data := update.CallbackQuery.Data
+	parts := strings.Split(data, ":")
+	folderId := parts[1]
+
+	link, err := h.service.GenerateShareLink(ctx, folderId, botUsername)
+	if err != nil {
+		b.SendMessage(ctx, &bot.SendMessageParams{
+			ChatID: chatID,
+			Text:   "Issue in generating link",
+		})
+		return
+	}
+
+	b.SendMessage(ctx, &bot.SendMessageParams{
+		ChatID: chatID,
+		Text:   "Share this link to other, they will get access to this folder once they click it : " + link,
+	})
+
+}
+
+func (h *FileHandler) AccessGrand(ctx context.Context, b *bot.Bot, update *models.Update) {
+
+	chatID := update.Message.Chat.ID
+	userID := strconv.Itoa(int(update.Message.From.ID))
+
+	text := update.Message.Text
+	parts := strings.Fields(text)
+
+	folderID := parts[1]
+
+	if err := h.service.FolderAccess(ctx, userID, folderID); err != nil {
+		b.SendMessage(ctx, &bot.SendMessageParams{
+			ChatID: chatID,
+			Text:   "Issue in providing access to the folder. Ask the sender to generate new link and send",
+		})
+		return
+	}
+
+	b.SendMessage(ctx, &bot.SendMessageParams{
+		ChatID: chatID,
+		Text:   "You now have access to the folder. /getfiles to get all the files in the folder and /latest to get the latest files in  the folder ",
+	})
 }

@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strings"
 
 	"github.com/deltrexgg/telegram-media-bot/internal/domain"
@@ -22,6 +23,8 @@ type FileService interface {
 		fileType string,
 	) (string, error)
 	GetLatestFiles(ctx context.Context, user_id string, folder_id string) ([]domain.SendFile, error)
+	FolderAccess(ctx context.Context, user_id string, folder_id string) error
+	GenerateShareLink(ctx context.Context, folder_id string, botusername string) (string, error)
 }
 
 type fileservice struct {
@@ -123,4 +126,23 @@ func (s *fileservice) FileUpload(
 	}
 
 	return "", nil
+}
+
+func (s *fileservice) FolderAccess(ctx context.Context, user_id string, folder_id string) error {
+	details := &domain.Access{
+		ID:       utils.IdGenerator(),
+		FolderID: folder_id,
+		UserID:   user_id,
+	}
+
+	return s.repo.GrandAccess(ctx, *details)
+}
+
+func (s *fileservice) GenerateShareLink(ctx context.Context, folder_id string, botusername string) (string, error) {
+	link := fmt.Sprintf("https://t.me/%s?join=%s", botusername, folder_id)
+	if link == "" {
+		return "", errors.New("Issue in generating the link")
+	}
+
+	return link, nil
 }
