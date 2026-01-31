@@ -54,10 +54,11 @@ func main() {
 
 	opts := []bot.Option{
 		bot.WithMessageTextHandler("/makefolder", bot.MatchTypePrefix, folderhandler.CreateFolder),
-		bot.WithMessageTextHandler("/folders", bot.MatchTypePrefix, folderhandler.GetFolderList),
+		bot.WithMessageTextHandler("/getfiles", bot.MatchTypePrefix, folderhandler.GetFolderList),
 		bot.WithMessageTextHandler("/addfiles", bot.MatchTypePrefix, folderhandler.GetFolderList),
 		bot.WithMessageTextHandler("/stop", bot.MatchTypePrefix, filehandler.StopShare),
 		bot.WithCallbackQueryDataHandler("", bot.MatchTypePrefix, filehandler.CallBackHandler),
+		bot.WithMessageTextHandler("/latest", bot.MatchTypePrefix, folderhandler.GetFolderList),
 		bot.WithDefaultHandler(filehandler.CommonFilehandler),
 	}
 

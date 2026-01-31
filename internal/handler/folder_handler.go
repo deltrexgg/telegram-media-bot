@@ -73,6 +73,9 @@ func (h *Handler) GetFolderList(ctx context.Context, b *bot.Bot, update *models.
 	if strings.HasPrefix(update.Message.Text, "/addfiles") {
 		intent = "upload"
 	}
+	if strings.HasPrefix(update.Message.Text, "/latest") {
+		intent = "newfiles"
+	}
 
 	buttonpad, err := h.service.Folderlist(ctx, userID, intent)
 	if err != nil {
@@ -89,4 +92,3 @@ func (h *Handler) GetFolderList(ctx context.Context, b *bot.Bot, update *models.
 		ReplyMarkup: buttonpad,
 	})
 }
-

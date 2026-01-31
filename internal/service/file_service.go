@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"errors"
-	"log"
 	"strings"
 
 	"github.com/deltrexgg/telegram-media-bot/internal/domain"

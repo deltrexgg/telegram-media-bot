@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/deltrexgg/telegram-media-bot/internal/domain"
 	"github.com/deltrexgg/telegram-media-bot/internal/service"
 	"github.com/go-telegram/bot"
 	"github.com/go-telegram/bot/models"
@@ -26,11 +27,12 @@ func (h *FileHandler) CallBackHandler(ctx context.Context, b *bot.Bot, update *m
 	switch action {
 	case "view":
 		// call ShowFiles
-		//h.ShowFiles(ctx, b, update)
-		h.ShowLatestFiles(ctx, b, update)
+		h.ShowFiles(ctx, b, update)
 	case "upload":
 		//call StartShare
 		h.StartShare(ctx, b, update)
+	case "newfiles":
+		h.ShowLatestFiles(ctx, b, update)
 	}
 
 }
@@ -51,12 +53,7 @@ func (h *FileHandler) ShowLatestFiles(ctx context.Context, b *bot.Bot, update *m
 		return
 	}
 
-	log.Println("Lasted Files :", latest)
-
-	b.SendMessage(ctx, &bot.SendMessageParams{
-		ChatID: chatID,
-		Text:   "You have catch up everything!",
-	})
+	ForwordFiles(ctx, chatID, latest, b)
 
 }
 
@@ -78,16 +75,6 @@ func (h *FileHandler) ShowFiles(ctx context.Context, b *bot.Bot, update *models.
 		return
 	}
 
-	/*
-		userID := strconv.Itoa(int(update.Message.From.ID))
-
-		latest, err := h.service.GetLatestFiles(ctx, userID, folder_id)
-		if err != nil {
-			log.Println("Could not fetch latest files")
-		}
-		log.Println("Lasted Files :", latest)
-	*/
-
 	if filesid == nil {
 		b.SendMessage(ctx, &bot.SendMessageParams{
 			ChatID: chatID,
@@ -96,6 +83,12 @@ func (h *FileHandler) ShowFiles(ctx context.Context, b *bot.Bot, update *models.
 
 		return
 	}
+
+	ForwordFiles(ctx, chatID, filesid, b)
+
+}
+
+func ForwordFiles(ctx context.Context, chatID int64, filesid []domain.SendFile, b *bot.Bot) {
 
 	for _, f := range filesid {
 
