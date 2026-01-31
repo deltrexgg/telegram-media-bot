@@ -271,9 +271,28 @@ func (h *FileHandler) CommonFilehandler(ctx context.Context, b *bot.Bot, update 
 	if msg.Text != "" {
 		b.SendMessage(ctx, &bot.SendMessageParams{
 			ChatID: chatID,
-			Text:   "Wrong Commands !",
+			Text: `
+📂 Folder Commands
+
+• Make a folder:
+  /makefolder foldername
+
+• Upload files to a folder:
+  /addfiles
+  (send files, then type /stop)
+
+• View all files in a folder:
+  /getfiles
+
+• View latest uploaded files:
+  /latest
+
+• Share folder access:
+  /share
+`,
 		})
 	}
+
 }
 
 func (h *FileHandler) ShareLink(ctx context.Context, b *bot.Bot, update *models.Update) {
