@@ -26,11 +26,37 @@ func (h *FileHandler) CallBackHandler(ctx context.Context, b *bot.Bot, update *m
 	switch action {
 	case "view":
 		// call ShowFiles
-		h.ShowFiles(ctx, b, update)
+		//h.ShowFiles(ctx, b, update)
+		h.ShowLatestFiles(ctx, b, update)
 	case "upload":
 		//call StartShare
 		h.StartShare(ctx, b, update)
 	}
+
+}
+
+func (h *FileHandler) ShowLatestFiles(ctx context.Context, b *bot.Bot, update *models.Update) {
+	if update.CallbackQuery == nil {
+		return
+	}
+
+	folder_id := update.CallbackQuery.Data
+	chatID := update.CallbackQuery.From.ID
+
+	userID := strconv.Itoa(int(update.CallbackQuery.From.ID))
+
+	latest, err := h.service.GetLatestFiles(ctx, userID, folder_id)
+	if err != nil {
+		log.Println("Could not fetch latest files")
+		return
+	}
+
+	log.Println("Lasted Files :", latest)
+
+	b.SendMessage(ctx, &bot.SendMessageParams{
+		ChatID: chatID,
+		Text:   "You have catch up everything!",
+	})
 
 }
 
@@ -52,6 +78,16 @@ func (h *FileHandler) ShowFiles(ctx context.Context, b *bot.Bot, update *models.
 		return
 	}
 
+	/*
+		userID := strconv.Itoa(int(update.Message.From.ID))
+
+		latest, err := h.service.GetLatestFiles(ctx, userID, folder_id)
+		if err != nil {
+			log.Println("Could not fetch latest files")
+		}
+		log.Println("Lasted Files :", latest)
+	*/
+
 	if filesid == nil {
 		b.SendMessage(ctx, &bot.SendMessageParams{
 			ChatID: chatID,
@@ -62,8 +98,6 @@ func (h *FileHandler) ShowFiles(ctx context.Context, b *bot.Bot, update *models.
 	}
 
 	for _, f := range filesid {
-
-		log.Println(f.FileID, f.Type)
 
 		switch f.Type {
 

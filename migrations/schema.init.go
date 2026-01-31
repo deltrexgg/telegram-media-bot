@@ -50,12 +50,12 @@ func AutoMigrate(db *sql.DB) {
 
 	historySmt := `
 	CREATE TABLE IF NOT EXISTS fetch_history (
-		id TEXT PRIMARY KEY,
-		folder_id TEXT NOT NULL,
-		user_id TEXT NOT NULL,
-		last_delivered_at TEXT DEFAULT CURRENT_TIMESTAMP,
-		FOREIGN KEY (folder_id) REFERENCES folders(id),
-		FOREIGN KEY (user_id) REFERENCES folders(created_by)
+	id TEXT PRIMARY KEY,
+	folder_id TEXT NOT NULL,
+	user_id TEXT NOT NULL,
+	last_delivered_at TEXT DEFAULT CURRENT_TIMESTAMP,
+	FOREIGN KEY (folder_id) REFERENCES folders(id) ON DELETE CASCADE,
+	UNIQUE (user_id, folder_id)
 	);`
 
 	statusSmt := `

@@ -3,19 +3,19 @@ package repository
 import (
 	"context"
 	"database/sql"
-	"time"
+	"log"
 
 	"github.com/deltrexgg/telegram-media-bot/internal/domain"
 	"github.com/deltrexgg/telegram-media-bot/internal/utils"
 )
 
 type FileRepo interface {
-	Get(ctx context.Context, folder_id string, lastVisit *time.Time) ([]domain.SendFile, error)
+	Get(ctx context.Context, folder_id string, lastVisit string) ([]domain.SendFile, error)
 	AddStatus(ctx context.Context, details domain.Status) error
 	StopFileShare(ctx context.Context, user_id string) error
 	Upload(ctx context.Context, fileinfo domain.Files) error
 	OpenedFolder(ctx context.Context, user_id string) (string, error)
-	GetOrCreateHistory(ctx context.Context, userID string, folderID string) (time.Time, error)
+	GetOrCreateHistory(ctx context.Context, userID string, folderID string) (string, error)
 	UpdateHistory(ctx context.Context, user_id string, folder_id string) error
 }
 
@@ -31,7 +31,7 @@ func (r *filerepo) GetOrCreateHistory(
 	ctx context.Context,
 	userID string,
 	folderID string,
-) (time.Time, error) {
+) (string, error) {
 
 	// ensure row exists (insert if missing)
 	_, err := r.db.ExecContext(
@@ -44,11 +44,12 @@ func (r *filerepo) GetOrCreateHistory(
 		folderID,
 	)
 	if err != nil {
-		return time.Time{}, err
+		log.Println("Error at insert :", err)
+		return "", err
 	}
 
 	// now safely read
-	var lastVisited time.Time
+	var lastVisited string
 	err = r.db.QueryRowContext(
 		ctx,
 		`SELECT last_delivered_at
@@ -59,7 +60,8 @@ func (r *filerepo) GetOrCreateHistory(
 	).Scan(&lastVisited)
 
 	if err != nil {
-		return time.Time{}, err
+		log.Println("Error at getting lastvisit :", err)
+		return "", err
 	}
 
 	return lastVisited, nil
@@ -77,7 +79,7 @@ func (r *filerepo) UpdateHistory(ctx context.Context, user_id string, folder_id 
 func (r *filerepo) Get(
 	ctx context.Context,
 	folderID string,
-	lastVisit *time.Time,
+	lastVisit string,
 ) ([]domain.SendFile, error) {
 
 	var (
@@ -85,8 +87,8 @@ func (r *filerepo) Get(
 		err  error
 	)
 
-	if lastVisit == nil || lastVisit.IsZero() {
-		// fetch all files
+	if lastVisit == "" {
+		// first time: fetch all files
 		rows, err = r.db.QueryContext(
 			ctx,
 			`SELECT file_id, type
@@ -95,7 +97,7 @@ func (r *filerepo) Get(
 			folderID,
 		)
 	} else {
-		// fetch only files after last visit
+		// subsequent fetch: only new files
 		rows, err = r.db.QueryContext(
 			ctx,
 			`SELECT file_id, type

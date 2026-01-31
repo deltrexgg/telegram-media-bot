@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"errors"
+	"log"
 	"strings"
 
 	"github.com/deltrexgg/telegram-media-bot/internal/domain"
@@ -21,6 +22,7 @@ type FileService interface {
 		fileID string,
 		fileType string,
 	) (string, error)
+	GetLatestFiles(ctx context.Context, user_id string, folder_id string) ([]domain.SendFile, error)
 }
 
 type fileservice struct {
@@ -44,16 +46,20 @@ func (s *fileservice) GetFiles(ctx context.Context, folder_id string) ([]domain.
 		return nil, errors.New("not a valid id")
 	}
 
-	return s.repo.Get(ctx, folder_id, nil)
+	return s.repo.Get(ctx, folder_id, "")
 }
 
 func (s *fileservice) GetLatestFiles(ctx context.Context, user_id string, folder_id string) ([]domain.SendFile, error) {
+
+	parts := strings.Split(folder_id, ":")
+	folder_id = parts[1]
+
 	lastvisit, err := s.repo.GetOrCreateHistory(ctx, user_id, folder_id)
 	if err != nil {
 		return nil, err
 	}
 
-	fileids, err := s.repo.Get(ctx, folder_id, &lastvisit)
+	fileids, err := s.repo.Get(ctx, folder_id, lastvisit)
 	if err != nil {
 		return nil, err
 	}
