@@ -60,6 +60,7 @@ func main() {
 		bot.WithCallbackQueryDataHandler("", bot.MatchTypePrefix, filehandler.CallBackHandler),
 		bot.WithMessageTextHandler("/latest", bot.MatchTypePrefix, folderhandler.GetFolderList),
 		bot.WithMessageTextHandler("/share", bot.MatchTypePrefix, folderhandler.GetFolderList),
+		bot.WithMessageTextHandler("/start", bot.MatchTypePrefix, filehandler.AccessGrand),
 		bot.WithDefaultHandler(filehandler.CommonFilehandler),
 	}
 

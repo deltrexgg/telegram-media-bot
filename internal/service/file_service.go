@@ -139,7 +139,7 @@ func (s *fileservice) FolderAccess(ctx context.Context, user_id string, folder_i
 }
 
 func (s *fileservice) GenerateShareLink(ctx context.Context, folder_id string, botusername string) (string, error) {
-	link := fmt.Sprintf("https://t.me/%s?join=%s", botusername, folder_id)
+	link := fmt.Sprintf("https://t.me/%s?start=%s", botusername, folder_id)
 	if link == "" {
 		return "", errors.New("Issue in generating the link")
 	}

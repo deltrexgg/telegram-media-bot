@@ -319,21 +319,30 @@ func (h *FileHandler) AccessGrand(ctx context.Context, b *bot.Bot, update *model
 	chatID := update.Message.Chat.ID
 	userID := strconv.Itoa(int(update.Message.From.ID))
 
-	text := update.Message.Text
-	parts := strings.Fields(text)
+	parts := strings.Fields(update.Message.Text)
 
+	// Normal /start
+	if len(parts) == 1 {
+		b.SendMessage(ctx, &bot.SendMessageParams{
+			ChatID: chatID,
+			Text:   "Welcome! Use /getfiles or /latest to view your folders.",
+		})
+		return
+	}
+
+	// /start <folderID>
 	folderID := parts[1]
 
 	if err := h.service.FolderAccess(ctx, userID, folderID); err != nil {
 		b.SendMessage(ctx, &bot.SendMessageParams{
 			ChatID: chatID,
-			Text:   "Issue in providing access to the folder. Ask the sender to generate new link and send",
+			Text:   "This link is invalid or expired.",
 		})
 		return
 	}
 
 	b.SendMessage(ctx, &bot.SendMessageParams{
 		ChatID: chatID,
-		Text:   "You now have access to the folder. /getfiles to get all the files in the folder and /latest to get the latest files in  the folder ",
+		Text:   "✅ You now have access to the folder.\nUse /folders to view it.",
 	})
 }
