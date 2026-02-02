@@ -41,11 +41,11 @@ func AutoMigrate(db *sql.DB) {
 
 	accessSmt := `
 	CREATE TABLE IF NOT EXISTS access (
-		id TEXT PRIMARY KEY,
-		folder_id TEXT NOT NULL,
-		user_id TEXT NOT NULL,
-		joined_at TEXT DEFAULT CURRENT_TIMESTAMP,
-		FOREIGN KEY (folder_id) REFERENCES folders(id)
+	id TEXT PRIMARY KEY,
+	folder_id TEXT NOT NULL,
+	user_id TEXT NOT NULL,
+	joined_at TEXT DEFAULT CURRENT_TIMESTAMP,
+	FOREIGN KEY (folder_id) REFERENCES folders(id) ON DELETE CASCADE
 	);`
 
 	historySmt := `

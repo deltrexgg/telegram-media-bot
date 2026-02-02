@@ -19,6 +19,9 @@ type FileRepo interface {
 	UpdateHistory(ctx context.Context, user_id string, folder_id string) error
 	GrandAccess(ctx context.Context, details domain.Access) error
 	RevokeAccess(ctx context.Context, details domain.Access) error
+	FolderOwnerCheck(ctx context.Context, folder_id string) (string, error)
+
+	DeleteFolder(ctx context.Context, folder_id string) error
 }
 
 type filerepo struct {
@@ -231,6 +234,27 @@ func (r *filerepo) GrandAccess(ctx context.Context, details domain.Access) error
 func (r *filerepo) RevokeAccess(ctx context.Context, details domain.Access) error {
 	_, err := r.db.Exec("DELETE FROM access WHERE folder_id = ? AND user_id = ?;", details.FolderID, details.UserID)
 	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *filerepo) FolderOwnerCheck(ctx context.Context, folder_id string) (string, error) {
+	var createdby string
+	err := r.db.QueryRowContext(ctx, `SELECT created_by FROM folders WHERE id = ?;`, folder_id).Scan(&createdby)
+	if err != nil {
+		return "", err
+	}
+
+	return createdby, nil
+
+}
+
+func (r *filerepo) DeleteFolder(ctx context.Context, folder_id string) error {
+	_, err := r.db.Exec("DELETE FROM folders WHERE id = ?;", folder_id)
+	if err != nil {
+		log.Println("Error in deletion :", err)
 		return err
 	}
 

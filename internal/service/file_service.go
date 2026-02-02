@@ -25,6 +25,7 @@ type FileService interface {
 	GetLatestFiles(ctx context.Context, user_id string, folder_id string) ([]domain.SendFile, error)
 	FolderAccess(ctx context.Context, user_id string, folder_id string) error
 	GenerateShareLink(ctx context.Context, folder_id string, botusername string) (string, error)
+	RemoveAccessNDelete(ctx context.Context, user_id string, folder_id string) error
 }
 
 type fileservice struct {
@@ -145,4 +146,33 @@ func (s *fileservice) GenerateShareLink(ctx context.Context, folder_id string, b
 	}
 
 	return link, nil
+}
+
+func (s *fileservice) RemoveAccessNDelete(ctx context.Context, user_id string, folder_id string) error {
+
+	parts := strings.Split(folder_id, ":")
+	folder_id = parts[1]
+
+	created_by, err := s.repo.FolderOwnerCheck(ctx, folder_id)
+	if err != nil {
+		return err
+	}
+
+	if created_by == user_id {
+		if err := s.repo.DeleteFolder(ctx, folder_id); err != nil {
+			return err
+		}
+		return nil
+	}
+
+	details := &domain.Access{
+		UserID:   user_id,
+		FolderID: folder_id,
+	}
+	err = s.repo.RevokeAccess(ctx, *details)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

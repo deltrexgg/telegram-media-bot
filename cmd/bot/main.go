@@ -34,6 +34,9 @@ func main() {
 		log.Fatalf("Database failed to connect")
 	}
 
+	db.SetMaxIdleConns(1)
+	db.SetMaxOpenConns(1)
+
 	migrations.AutoMigrate(db)
 
 	apiKey := os.Getenv("TELEGRAM_API")
@@ -61,6 +64,7 @@ func main() {
 		bot.WithMessageTextHandler("/latest", bot.MatchTypePrefix, folderhandler.GetFolderList),
 		bot.WithMessageTextHandler("/share", bot.MatchTypePrefix, folderhandler.GetFolderList),
 		bot.WithMessageTextHandler("/start", bot.MatchTypePrefix, filehandler.AccessGrand),
+		bot.WithMessageTextHandler("/delete", bot.MatchTypePrefix, folderhandler.GetFolderList),
 		bot.WithDefaultHandler(filehandler.CommonFilehandler),
 	}
 

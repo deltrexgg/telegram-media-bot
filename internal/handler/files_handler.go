@@ -35,6 +35,8 @@ func (h *FileHandler) CallBackHandler(ctx context.Context, b *bot.Bot, update *m
 		h.ShowLatestFiles(ctx, b, update)
 	case "link":
 		h.ShareLink(ctx, b, update)
+	case "remove":
+		h.RemoveFolder(ctx, b, update)
 	}
 
 }
@@ -289,6 +291,10 @@ func (h *FileHandler) CommonFilehandler(ctx context.Context, b *bot.Bot, update 
 
 • Share folder access:
   /share
+
+• Delete folder:
+  /delete
+
 `,
 		})
 	}
@@ -362,6 +368,32 @@ func (h *FileHandler) AccessGrand(ctx context.Context, b *bot.Bot, update *model
 
 	b.SendMessage(ctx, &bot.SendMessageParams{
 		ChatID: chatID,
-		Text:   "✅ You now have access to the folder.\nUse /folders to view it.",
+		Text:   " You now have access to the folder.\nUse /folders to view it.",
+	})
+}
+
+func (h *FileHandler) RemoveFolder(ctx context.Context, b *bot.Bot, update *models.Update) {
+	if update.CallbackQuery == nil {
+		return
+	}
+
+	folder_id := update.CallbackQuery.Data
+	chatID := update.CallbackQuery.From.ID
+
+	userID := strconv.Itoa(int(update.CallbackQuery.From.ID))
+
+	err := h.service.RemoveAccessNDelete(ctx, userID, folder_id)
+	if err != nil {
+		b.SendMessage(ctx, &bot.SendMessageParams{
+			ChatID: chatID,
+			Text:   "Issue in deleting the folder",
+		})
+
+		return
+	}
+
+	b.SendMessage(ctx, &bot.SendMessageParams{
+		ChatID: chatID,
+		Text:   "Folder removed successfully",
 	})
 }
