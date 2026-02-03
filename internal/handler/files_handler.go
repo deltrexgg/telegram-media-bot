@@ -368,7 +368,7 @@ func (h *FileHandler) AccessGrand(ctx context.Context, b *bot.Bot, update *model
 
 	b.SendMessage(ctx, &bot.SendMessageParams{
 		ChatID: chatID,
-		Text:   " You now have access to the folder.\nUse /folders to view it.",
+		Text:   " You now have access to the folder.\nUse /getfiles or /latest to view it.",
 	})
 }
 
