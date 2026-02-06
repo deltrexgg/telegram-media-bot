@@ -25,7 +25,7 @@ import (
 func main() {
 
 	if err := godotenv.Load(); err != nil {
-		log.Fatal("failed to load .env file")
+		log.Println("No .env file found, using environment variables")
 	}
 
 	// return the DB access pointer to a var in the main file which is passed to repo of the modules
