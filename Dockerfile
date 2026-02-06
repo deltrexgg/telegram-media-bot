@@ -1,26 +1,33 @@
-# ---- Build stage ----
-FROM golang:1.25-alpine AS builder
+# ---------- Builder ----------
+FROM golang:1.25.1-alpine AS builder
 
 WORKDIR /app
+
+# Needed for sqlite
+RUN apk add --no-cache gcc musl-dev sqlite-dev
 
 COPY go.mod go.sum ./
 RUN go mod download
 
 COPY . .
 
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
+# Build the bot
+RUN CGO_ENABLED=1 GOOS=linux GOARCH=amd64 \
     go build -o bot ./cmd/bot
 
-# ---- Runtime stage ----
+# ---------- Runtime ----------
 FROM alpine:latest
 
 WORKDIR /app
 
-RUN apk add --no-cache ca-certificates
+# SQLite runtime dependency
+RUN apk add --no-cache sqlite-libs ca-certificates
 
 COPY --from=builder /app/bot /app/bot
 
-VOLUME ["/data"]
+# Directory where DB will be mounted
+RUN mkdir -p /data
+
 ENV DB_PATH=/data/database.db
 
 CMD ["/app/bot"]
